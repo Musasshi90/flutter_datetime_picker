@@ -104,8 +104,11 @@ class HomePage extends StatelessWidget {
           children: <Widget>[
             TextButton(
                 onPressed: () {
+                  List<DateTime> bookedDateTime = [DateTime(2019, 04, 20)];
                   DatePicker.showDatePicker(context,
                       showTitleActions: true,
+                      bookedDateTime:bookedDateTime,
+                      bookedColor: Colors.green,
                       minTime: DateTime(2018, 3, 5),
                       maxTime: DateTime(2019, 6, 7),
                       theme: DatePickerTheme(
@@ -130,8 +133,8 @@ class HomePage extends StatelessWidget {
                 )),
             TextButton(
                 onPressed: () {
-                  DatePicker.showTimePicker(context, showTitleActions: true,
-                      onChanged: (date) {
+                  DatePicker.showTimePicker(context,
+                      showTitleActions: true, onChanged: (date) {
                     print('change $date in time zone ' +
                         date.timeZoneOffset.inHours.toString());
                   }, onConfirm: (date) {

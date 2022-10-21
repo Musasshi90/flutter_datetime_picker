@@ -23,6 +23,7 @@ class DatePicker {
   static Future<DateTime?> showDatePicker(
     BuildContext context, {
     bool showTitleActions: true,
+    List<DateTime>? bookedDateTime,
     DateTime? minTime,
     DateTime? maxTime,
     DateChangedCallback? onChanged,
@@ -31,11 +32,14 @@ class DatePicker {
     locale: LocaleType.en,
     DateTime? currentTime,
     DatePickerTheme? theme,
+    Color? bookedColor,
   }) async {
     return await Navigator.push(
       context,
       _DatePickerRoute(
         showTitleActions: showTitleActions,
+        bookedDateTime: bookedDateTime,
+        bookedColor: bookedColor,
         onChanged: onChanged,
         onConfirm: onConfirm,
         onCancel: onCancel,
@@ -59,6 +63,7 @@ class DatePicker {
   static Future<DateTime?> showTimePicker(
     BuildContext context, {
     bool showTitleActions: true,
+    List<DateTime>? bookedDateTime,
     bool showSecondsColumn: true,
     DateChangedCallback? onChanged,
     DateChangedCallback? onConfirm,
@@ -66,11 +71,14 @@ class DatePicker {
     locale: LocaleType.en,
     DateTime? currentTime,
     DatePickerTheme? theme,
+    Color? bookedColor,
   }) async {
     return await Navigator.push(
       context,
       _DatePickerRoute(
         showTitleActions: showTitleActions,
+        bookedDateTime: bookedDateTime,
+        bookedColor: bookedColor,
         onChanged: onChanged,
         onConfirm: onConfirm,
         onCancel: onCancel,
@@ -93,17 +101,21 @@ class DatePicker {
   static Future<DateTime?> showTime12hPicker(
     BuildContext context, {
     bool showTitleActions: true,
+    List<DateTime>? bookedDateTime,
     DateChangedCallback? onChanged,
     DateChangedCallback? onConfirm,
     DateCancelledCallback? onCancel,
     locale: LocaleType.en,
     DateTime? currentTime,
     DatePickerTheme? theme,
+    Color? bookedColor,
   }) async {
     return await Navigator.push(
       context,
       _DatePickerRoute(
         showTitleActions: showTitleActions,
+        bookedDateTime: bookedDateTime,
+        bookedColor: bookedColor,
         onChanged: onChanged,
         onConfirm: onConfirm,
         onCancel: onCancel,
@@ -125,6 +137,7 @@ class DatePicker {
   static Future<DateTime?> showDateTimePicker(
     BuildContext context, {
     bool showTitleActions: true,
+    List<DateTime>? bookedDateTime,
     DateTime? minTime,
     DateTime? maxTime,
     DateChangedCallback? onChanged,
@@ -133,11 +146,14 @@ class DatePicker {
     locale: LocaleType.en,
     DateTime? currentTime,
     DatePickerTheme? theme,
+    Color? bookedColor,
   }) async {
     return await Navigator.push(
       context,
       _DatePickerRoute(
         showTitleActions: showTitleActions,
+        bookedDateTime: bookedDateTime,
+        bookedColor: bookedColor,
         onChanged: onChanged,
         onConfirm: onConfirm,
         onCancel: onCancel,
@@ -161,17 +177,21 @@ class DatePicker {
   static Future<DateTime?> showPicker(
     BuildContext context, {
     bool showTitleActions: true,
+    List<DateTime>? bookedDateTime,
     DateChangedCallback? onChanged,
     DateChangedCallback? onConfirm,
     DateCancelledCallback? onCancel,
     locale: LocaleType.en,
     BasePickerModel? pickerModel,
     DatePickerTheme? theme,
+    Color? bookedColor,
   }) async {
     return await Navigator.push(
       context,
       _DatePickerRoute(
         showTitleActions: showTitleActions,
+        bookedDateTime: bookedDateTime,
+        bookedColor: bookedColor,
         onChanged: onChanged,
         onConfirm: onConfirm,
         onCancel: onCancel,
@@ -188,6 +208,8 @@ class DatePicker {
 class _DatePickerRoute<T> extends PopupRoute<T> {
   _DatePickerRoute({
     this.showTitleActions,
+    this.bookedDateTime,
+    this.bookedColor,
     this.onChanged,
     this.onConfirm,
     this.onCancel,
@@ -201,6 +223,8 @@ class _DatePickerRoute<T> extends PopupRoute<T> {
         super(settings: settings);
 
   final bool? showTitleActions;
+  final List<DateTime>? bookedDateTime;
+  final Color? bookedColor;
   final DateChangedCallback? onChanged;
   final DateChangedCallback? onConfirm;
   final DateCancelledCallback? onCancel;
@@ -237,6 +261,8 @@ class _DatePickerRoute<T> extends PopupRoute<T> {
       context: context,
       removeTop: true,
       child: _DatePickerComponent(
+        bookedDateTime: bookedDateTime,
+        bookedColor: bookedColor,
         onChanged: onChanged,
         locale: this.locale,
         route: this,
@@ -252,10 +278,14 @@ class _DatePickerComponent extends StatefulWidget {
     Key? key,
     required this.route,
     required this.pickerModel,
+    this.bookedDateTime,
+    this.bookedColor,
     this.onChanged,
     this.locale,
   }) : super(key: key);
 
+  final List<DateTime>? bookedDateTime;
+  final Color? bookedColor;
   final DateChangedCallback? onChanged;
 
   final _DatePickerRoute route;
@@ -322,6 +352,14 @@ class _DatePickerState extends State<_DatePickerComponent> {
 
   void _notifyDateChanged() {
     if (widget.onChanged != null) {
+      DateTime? finalTime = widget.pickerModel.finalTime();
+      if (widget.bookedDateTime != null &&
+          finalTime != null &&
+          widget.bookedDateTime!.contains(finalTime)) {
+        if (mounted) {
+          setState(() {});
+        }
+      }
       widget.onChanged!(widget.pickerModel.finalTime()!);
     }
   }
@@ -337,6 +375,20 @@ class _DatePickerState extends State<_DatePickerComponent> {
       );
     }
     return itemView;
+  }
+
+  TextStyle getTextStyle(DatePickerTheme theme) {
+    DateTime? finalTime = widget.pickerModel.finalTime();
+    List<DateTime>? bookedDateTime = widget.bookedDateTime;
+    Color? bookedColor = widget.bookedColor;
+    TextStyle textStyle = theme.itemStyle;
+    if (bookedDateTime != null &&
+        finalTime != null &&
+        bookedColor != null &&
+        bookedDateTime.contains(widget.pickerModel.finalTime())) {
+      textStyle = theme.itemStyle.copyWith(color: bookedColor);
+    }
+    return textStyle;
   }
 
   Widget _renderColumnView(
@@ -376,6 +428,7 @@ class _DatePickerState extends State<_DatePickerComponent> {
             },
             useMagnifier: true,
             itemBuilder: (BuildContext context, int index) {
+              TextStyle textStyle = getTextStyle(theme);
               final content = stringAtIndexCB(index);
               if (content == null) {
                 return null;
@@ -385,7 +438,7 @@ class _DatePickerState extends State<_DatePickerComponent> {
                 alignment: Alignment.center,
                 child: Text(
                   content,
-                  style: theme.itemStyle,
+                  style: textStyle,
                   textAlign: TextAlign.start,
                 ),
               );
@@ -510,6 +563,13 @@ class _DatePickerState extends State<_DatePickerComponent> {
                 style: theme.doneStyle,
               ),
               onPressed: () {
+                DateTime? finalTime = widget.pickerModel.finalTime();
+                List<DateTime>? bookedDateTime = widget.bookedDateTime;
+                if (bookedDateTime != null &&
+                    finalTime != null &&
+                    bookedDateTime.contains(finalTime)) {
+                  return;
+                }
                 Navigator.pop(context, widget.pickerModel.finalTime());
                 if (widget.route.onConfirm != null) {
                   widget.route.onConfirm!(widget.pickerModel.finalTime()!);
