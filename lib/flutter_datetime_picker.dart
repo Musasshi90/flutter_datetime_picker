@@ -450,6 +450,7 @@ class _DatePickerState extends State<_DatePickerComponent> {
   }
 
   Widget _renderItemView(DatePickerTheme theme) {
+    TextStyle style = getTextStyle(theme);
     return Container(
       color: theme.backgroundColor,
       child: Directionality(
@@ -476,7 +477,7 @@ class _DatePickerState extends State<_DatePickerComponent> {
             ),
             Text(
               widget.pickerModel.leftDivider(),
-              style: theme.itemStyle,
+              style: style,
             ),
             Container(
               child: widget.pickerModel.layoutProportions()[1] > 0
@@ -497,7 +498,7 @@ class _DatePickerState extends State<_DatePickerComponent> {
             ),
             Text(
               widget.pickerModel.rightDivider(),
-              style: theme.itemStyle,
+              style: style,
             ),
             Container(
               child: widget.pickerModel.layoutProportions()[2] > 0
