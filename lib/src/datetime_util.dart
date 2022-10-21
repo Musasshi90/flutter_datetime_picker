@@ -1,5 +1,9 @@
 List<int> _leapYearMonths = const <int>[1, 3, 5, 7, 8, 10, 12];
 
+int left = 0;
+int middle = 1;
+int right = 2;
+
 int calcDateCount(int year, int month) {
   if (_leapYearMonths.contains(month)) {
     return 31;

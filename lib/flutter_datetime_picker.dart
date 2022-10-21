@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter_datetime_picker/src/datetime_picker_theme.dart';
 import 'package:flutter_datetime_picker/src/date_model.dart';
+import 'package:flutter_datetime_picker/src/datetime_util.dart';
 import 'package:flutter_datetime_picker/src/i18n_model.dart';
 
 export 'package:flutter_datetime_picker/src/datetime_picker_theme.dart';
@@ -89,8 +90,8 @@ class DatePicker {
         barrierLabel:
             MaterialLocalizations.of(context).modalBarrierDismissLabel,
         pickerModel: TimePickerModel(
-          showMinutes: showMinutes ?? true,
-          showSeconds: showSeconds ?? true,
+          showTimeMinutes: showMinutes ?? true,
+          showTimeSeconds: showSeconds ?? true,
           currentTime: currentTime,
           locale: locale,
           showSecondsColumn: showSecondsColumn,
@@ -129,7 +130,7 @@ class DatePicker {
         barrierLabel:
             MaterialLocalizations.of(context).modalBarrierDismissLabel,
         pickerModel: Time12hPickerModel(
-          showMinutes: showMinutes ?? true,
+          showTimeMinutes: showMinutes ?? true,
           currentTime: currentTime,
           locale: locale,
         ),
@@ -171,7 +172,7 @@ class DatePicker {
         pickerModel: DateTimePickerModel(
           currentTime: currentTime,
           minTime: minTime,
-          showMinutes: showMinutes ?? false,
+          showTimeMinutes: showMinutes ?? false,
           maxTime: maxTime,
           locale: locale,
         ),
@@ -289,14 +290,12 @@ class _DatePickerComponent extends StatefulWidget {
     required this.pickerModel,
     this.bookedDateTime,
     this.bookedColor,
-    this.showMinutes,
     this.onChanged,
     this.locale,
   }) : super(key: key);
 
   final List<DateTime>? bookedDateTime;
   final Color? bookedColor;
-  final bool? showMinutes;
   final DateChangedCallback? onChanged;
 
   final _DatePickerRoute route;
@@ -371,7 +370,7 @@ class _DatePickerState extends State<_DatePickerComponent> {
           setState(() {});
         }
       }
-      widget.onChanged!(widget.pickerModel.finalTime()!);
+      widget.onChanged!(finalTime!);
     }
   }
 
@@ -396,10 +395,35 @@ class _DatePickerState extends State<_DatePickerComponent> {
     if (bookedDateTime != null &&
         finalTime != null &&
         bookedColor != null &&
-        bookedDateTime.contains(widget.pickerModel.finalTime())) {
+        bookedDateTime.contains(finalTime)) {
       textStyle = theme.itemStyle.copyWith(color: bookedColor);
     }
     return textStyle;
+  }
+
+  Widget getColumnDataText(DatePickerTheme theme, String content, bool isScroll,
+      int layoutProportion) {
+    TextStyle textStyle = getTextStyle(theme);
+    Widget data = Container(
+      height: theme.itemHeight,
+      alignment: Alignment.center,
+      child: Text(
+        content,
+        style: textStyle,
+        textAlign: TextAlign.start,
+      ),
+    );
+    if (isScroll) {
+      return data;
+    } else {
+      return Expanded(
+          flex: layoutProportion,
+          child: Container(
+              padding: EdgeInsets.all(8.0),
+              height: theme.containerHeight,
+              decoration: BoxDecoration(color: theme.backgroundColor),
+              child: data));
+    }
   }
 
   Widget _renderColumnView(
@@ -440,20 +464,11 @@ class _DatePickerState extends State<_DatePickerComponent> {
             },
             useMagnifier: true,
             itemBuilder: (BuildContext context, int index) {
-              TextStyle textStyle = getTextStyle(theme);
               final content = stringAtIndexCB(index);
               if (content == null) {
                 return null;
               }
-              return Container(
-                height: theme.itemHeight,
-                alignment: Alignment.center,
-                child: Text(
-                  content,
-                  style: textStyle,
-                  textAlign: TextAlign.start,
-                ),
-              );
+              return getColumnDataText(theme, content, true, layoutProportion);
             },
           ),
         ),
@@ -493,45 +508,65 @@ class _DatePickerState extends State<_DatePickerComponent> {
               style: style,
             ),
             Container(
-              child: widget.pickerModel.layoutProportions()[1] > 0
-                  ? _renderColumnView(
-                      ValueKey(widget.pickerModel.currentLeftIndex()),
-                      false,
-                      theme,
-                      widget.pickerModel.middleStringAtIndex,
-                      middleScrollCtrl,
-                      widget.pickerModel.layoutProportions()[1], (index) {
-                      widget.pickerModel.setMiddleIndex(index);
-                    }, (index) {
-                      setState(() {
-                        refreshScrollOffset();
-                        _notifyDateChanged();
-                      });
-                    })
-                  : null,
+              child: widget.pickerModel.minutesLocation() == middle &&
+                      !widget.pickerModel.showMinutes()
+                  ? widget.pickerModel.layoutProportions()[1] > 0
+                      ? getColumnDataText(theme, '00', false,
+                          widget.pickerModel.layoutProportions()[1])
+                      : null
+                  : widget.pickerModel.layoutProportions()[1] > 0
+                      ? _renderColumnView(
+                          ValueKey(widget.pickerModel.currentLeftIndex()),
+                          false,
+                          theme,
+                          widget.pickerModel.middleStringAtIndex,
+                          middleScrollCtrl,
+                          widget.pickerModel.layoutProportions()[1], (index) {
+                          widget.pickerModel.setMiddleIndex(index);
+                        }, (index) {
+                          setState(() {
+                            refreshScrollOffset();
+                            _notifyDateChanged();
+                          });
+                        })
+                      : null,
             ),
             Text(
               widget.pickerModel.rightDivider(),
               style: style,
             ),
             Container(
-              child: widget.pickerModel.layoutProportions()[2] > 0
-                  ? _renderColumnView(
-                      ValueKey(widget.pickerModel.currentMiddleIndex() * 100 +
-                          widget.pickerModel.currentLeftIndex()),
-                      false,
-                      theme,
-                      widget.pickerModel.rightStringAtIndex,
-                      rightScrollCtrl,
-                      widget.pickerModel.layoutProportions()[2], (index) {
-                      widget.pickerModel.setRightIndex(index);
-                    }, (index) {
-                      setState(() {
-                        refreshScrollOffset();
-                        _notifyDateChanged();
-                      });
-                    })
-                  : null,
+              child: widget.pickerModel.minutesLocation() == right &&
+                      !widget.pickerModel.showMinutes()
+                  ? widget.pickerModel.layoutProportions()[2] > 0
+                      ? getColumnDataText(theme, '00', false,
+                          widget.pickerModel.layoutProportions()[2])
+                      : null
+                  : widget.pickerModel.secondsLocation() == right &&
+                          !widget.pickerModel.showSeconds()
+                      ? widget.pickerModel.layoutProportions()[2] > 0
+                          ? getColumnDataText(theme, '00', false,
+                              widget.pickerModel.layoutProportions()[2])
+                          : null
+                      : widget.pickerModel.layoutProportions()[2] > 0
+                          ? _renderColumnView(
+                              ValueKey(widget.pickerModel.currentMiddleIndex() *
+                                      100 +
+                                  widget.pickerModel.currentLeftIndex()),
+                              false,
+                              theme,
+                              widget.pickerModel.rightStringAtIndex,
+                              rightScrollCtrl,
+                              widget.pickerModel.layoutProportions()[2],
+                              (index) {
+                              widget.pickerModel.setRightIndex(index);
+                            }, (index) {
+                              setState(() {
+                                refreshScrollOffset();
+                                _notifyDateChanged();
+                              });
+                            })
+                          : null,
             ),
           ],
         ),
@@ -586,9 +621,9 @@ class _DatePickerState extends State<_DatePickerComponent> {
                     bookedDateTime.contains(finalTime)) {
                   return;
                 }
-                Navigator.pop(context, widget.pickerModel.finalTime());
+                Navigator.pop(context, finalTime);
                 if (widget.route.onConfirm != null) {
-                  widget.route.onConfirm!(widget.pickerModel.finalTime()!);
+                  widget.route.onConfirm!(finalTime!);
                 }
               },
             ),

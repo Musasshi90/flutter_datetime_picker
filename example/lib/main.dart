@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
+import 'package:flutter_datetime_picker/src/datetime_util.dart';
 
 void main() => runApp(new MyApp());
 
 class CustomPicker extends CommonPickerModel {
-  bool showMinutes;
-  bool showSeconds;
+  bool showTimeMinutes;
+  bool showTimeSeconds;
 
   String digits(int value, int length) {
     return '$value'.padLeft(length, "0");
@@ -14,13 +15,33 @@ class CustomPicker extends CommonPickerModel {
   CustomPicker(
       {DateTime? currentTime,
       LocaleType? locale,
-      this.showMinutes = true,
-      this.showSeconds = true})
+      this.showTimeMinutes = true,
+      this.showTimeSeconds = true})
       : super(locale: locale) {
     this.currentTime = currentTime ?? DateTime.now();
     this.setLeftIndex(this.currentTime.hour);
-    this.setMiddleIndex(showMinutes ? this.currentTime.minute : 0);
-    this.setRightIndex(showSeconds ? this.currentTime.second : 0);
+    this.setMiddleIndex(showTimeMinutes ? this.currentTime.minute : 0);
+    this.setRightIndex(showTimeSeconds ? this.currentTime.second : 0);
+  }
+
+  @override
+  bool showMinutes() {
+    return showTimeMinutes;
+  }
+
+  @override
+  bool showSeconds() {
+    return showTimeSeconds;
+  }
+
+  @override
+  int? minutesLocation() {
+    return middle;
+  }
+
+  @override
+  int? secondsLocation() {
+    return right;
   }
 
   @override
@@ -34,7 +55,7 @@ class CustomPicker extends CommonPickerModel {
 
   @override
   String? middleStringAtIndex(int index) {
-    if (showMinutes) {
+    if (showTimeMinutes) {
       if (index >= 0 && index < 60) {
         return this.digits(index, 2);
       } else {
@@ -47,7 +68,7 @@ class CustomPicker extends CommonPickerModel {
 
   @override
   String? rightStringAtIndex(int index) {
-    if (showSeconds) {
+    if (showTimeSeconds) {
       if (index >= 0 && index < 60) {
         return this.digits(index, 2);
       } else {
@@ -81,15 +102,15 @@ class CustomPicker extends CommonPickerModel {
             currentTime.month,
             currentTime.day,
             this.currentLeftIndex(),
-            this.currentMiddleIndex(),
-            this.currentRightIndex())
+            showTimeMinutes ? this.currentMiddleIndex() : 0,
+            showTimeSeconds ? this.currentRightIndex() : 0)
         : DateTime(
             currentTime.year,
             currentTime.month,
             currentTime.day,
             this.currentLeftIndex(),
-            this.currentMiddleIndex(),
-            this.currentRightIndex());
+            showTimeMinutes ? this.currentMiddleIndex() : 0,
+            showTimeSeconds ? this.currentRightIndex() : 0);
   }
 }
 
@@ -274,8 +295,8 @@ class HomePage extends StatelessWidget {
                   },
                       pickerModel: CustomPicker(
                           currentTime: DateTime.now(),
-                          showMinutes: false,
-                          showSeconds: false),
+                          showTimeMinutes: false,
+                          showTimeSeconds: false),
                       locale: LocaleType.en);
                 },
                 child: Text(
