@@ -72,6 +72,8 @@ class DatePicker {
     DateTime? currentTime,
     DatePickerTheme? theme,
     Color? bookedColor,
+    bool? showMinutes,
+    bool? showSeconds,
   }) async {
     return await Navigator.push(
       context,
@@ -87,6 +89,8 @@ class DatePicker {
         barrierLabel:
             MaterialLocalizations.of(context).modalBarrierDismissLabel,
         pickerModel: TimePickerModel(
+          showMinutes: showMinutes ?? true,
+          showSeconds: showSeconds ?? true,
           currentTime: currentTime,
           locale: locale,
           showSecondsColumn: showSecondsColumn,
@@ -109,6 +113,7 @@ class DatePicker {
     DateTime? currentTime,
     DatePickerTheme? theme,
     Color? bookedColor,
+    bool? showMinutes,
   }) async {
     return await Navigator.push(
       context,
@@ -124,6 +129,7 @@ class DatePicker {
         barrierLabel:
             MaterialLocalizations.of(context).modalBarrierDismissLabel,
         pickerModel: Time12hPickerModel(
+          showMinutes: showMinutes ?? true,
           currentTime: currentTime,
           locale: locale,
         ),
@@ -147,6 +153,7 @@ class DatePicker {
     DateTime? currentTime,
     DatePickerTheme? theme,
     Color? bookedColor,
+    bool? showMinutes,
   }) async {
     return await Navigator.push(
       context,
@@ -164,6 +171,7 @@ class DatePicker {
         pickerModel: DateTimePickerModel(
           currentTime: currentTime,
           minTime: minTime,
+          showMinutes: showMinutes ?? false,
           maxTime: maxTime,
           locale: locale,
         ),
@@ -185,6 +193,7 @@ class DatePicker {
     BasePickerModel? pickerModel,
     DatePickerTheme? theme,
     Color? bookedColor,
+    bool? showMinutes,
   }) async {
     return await Navigator.push(
       context,
@@ -280,12 +289,14 @@ class _DatePickerComponent extends StatefulWidget {
     required this.pickerModel,
     this.bookedDateTime,
     this.bookedColor,
+    this.showMinutes,
     this.onChanged,
     this.locale,
   }) : super(key: key);
 
   final List<DateTime>? bookedDateTime;
   final Color? bookedColor;
+  final bool? showMinutes;
   final DateChangedCallback? onChanged;
 
   final _DatePickerRoute route;
@@ -393,6 +404,7 @@ class _DatePickerState extends State<_DatePickerComponent> {
 
   Widget _renderColumnView(
     ValueKey key,
+    bool isMinutes,
     DatePickerTheme theme,
     StringAtIndexCallBack stringAtIndexCB,
     ScrollController scrollController,
@@ -462,6 +474,7 @@ class _DatePickerState extends State<_DatePickerComponent> {
               child: widget.pickerModel.layoutProportions()[0] > 0
                   ? _renderColumnView(
                       ValueKey(widget.pickerModel.currentLeftIndex()),
+                      false,
                       theme,
                       widget.pickerModel.leftStringAtIndex,
                       leftScrollCtrl,
@@ -483,6 +496,7 @@ class _DatePickerState extends State<_DatePickerComponent> {
               child: widget.pickerModel.layoutProportions()[1] > 0
                   ? _renderColumnView(
                       ValueKey(widget.pickerModel.currentLeftIndex()),
+                      false,
                       theme,
                       widget.pickerModel.middleStringAtIndex,
                       middleScrollCtrl,
@@ -505,6 +519,7 @@ class _DatePickerState extends State<_DatePickerComponent> {
                   ? _renderColumnView(
                       ValueKey(widget.pickerModel.currentMiddleIndex() * 100 +
                           widget.pickerModel.currentLeftIndex()),
+                      false,
                       theme,
                       widget.pickerModel.rightStringAtIndex,
                       rightScrollCtrl,
